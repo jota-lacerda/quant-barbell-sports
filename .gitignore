@@ -1,0 +1,10 @@
+# Ignora a infraestrutura do Python
+.venv/
+__pycache__/
+
+# Ignora senhas e credenciais (lembra do Sheets na Fase 5?)
+credentials.json
+.env
+
+# Ignora configurações locais da IDE
+.vscode/
