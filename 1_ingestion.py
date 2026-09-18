@@ -17,7 +17,9 @@ LEAGUES = {
     'Serie_A_Italy': (135, 'ita.1'),
     'Ligue_1': (61, 'fra.1'),
     'Libertadores': (13, 'conmebol.libertadores'),
-    'Champions_League': (2, 'uefa.champions')
+    'Champions_League': (2, 'uefa.champions'),
+    'Bundesliga': (78, 'ger.1'),
+    'Europa_League': (3, 'uefa.europa')
 }
 
 def extract_api_football(league_id, season, api_key):
@@ -42,8 +44,8 @@ def extract_espn_api(espn_code):
     url = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{espn_code}/scoreboard"
     
     params = {
-        "dates": f"{SEASON}0101-{SEASON}1231", 
-        "limit": "800" # Aumentado para cobrir todas as fases de ligas longas
+        "dates": str(SEASON), 
+        "limit": "500" 
     }
     
     try:
@@ -87,7 +89,11 @@ def extract_espn_api(espn_code):
                 "home_team": home_team,
                 "away_team": away_team,
                 "home_goals": home_goals,
-                "away_goals": away_goals
+                "away_goals": away_goals,
+                # [ADICIONADO] Garantindo que o pipeline de ML não quebre. 
+                # Usaremos Gols Reais como Proxy temporário do xG.
+                "home_xg": home_goals,
+                "away_xg": away_goals
             })
             
         df = pd.DataFrame(matches_list)
@@ -99,11 +105,7 @@ def extract_espn_api(espn_code):
 def run_ingestion_pipeline(league_name, api_id, espn_code, api_key):
     file_path = f"G:/Meu Drive/Quant/bronze/{league_name}_{SEASON}.csv"
     
-    if os.path.exists(file_path):
-        logging.info(f"[CACHE] Dados de {league_name} já existem no disco.")
-        return pd.read_csv(file_path)
-        
-    logging.info(f"== Processando {league_name} ==")
+    logging.info(f"== Puxando dados atualizados: {league_name} ==")
     
     try:
         df = extract_api_football(api_id, SEASON, api_key)
@@ -116,9 +118,16 @@ def run_ingestion_pipeline(league_name, api_id, espn_code, api_key):
             return pd.DataFrame()
 
     if not df.empty:
+        # [CORREÇÃO APLICADA] Normalização UTC -> Fuso de Brasília (BRT) antes de salvar
+        if 'date' in df.columns:
+            df['date'] = pd.to_datetime(df['date'], utc=True)
+            df['date'] = df['date'].dt.tz_convert('America/Sao_Paulo').dt.strftime('%Y-%m-%d')
+
         os.makedirs("G:/Meu Drive/Quant/bronze", exist_ok=True)
+        # O index=False garante que não será criada uma coluna inútil
+        # O to_csv com o modo padrão ('w') automaticamente sobrepõe o arquivo existente.
         df.to_csv(file_path, index=False)
-        logging.info(f"SUCESSO! {len(df)} partidas de {league_name} salvas em {file_path}\n")
+        logging.info(f"SUCESSO! {len(df)} partidas de {league_name} SOBRESCRITAS em {file_path}\n")
         
     return df
 
@@ -127,7 +136,7 @@ if __name__ == "__main__":
     API_KEY = os.getenv("API_FOOTBALL_KEY")
     
     print("\n=======================================================")
-    print(" MOTOR DE INGESTÃO LIVE (MULTI-LIGAS COM FALLBACKS)")
+    print(" MOTOR DE INGESTÃO LIVE (FORÇANDO ATUALIZAÇÃO / OVERWRITE)")
     print("=======================================================\n")
     
     all_dataframes = {}

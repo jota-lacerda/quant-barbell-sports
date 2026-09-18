@@ -76,7 +76,7 @@ if __name__ == "__main__":
             continue
             
         df_bronze = pd.read_csv(bronze_path)
-        
+
         # Só processa se tiver jogos suficientes (evita erro em ligas vazias)
         if len(df_bronze) > 0:
             df_silver = calculate_live_ewma(df_bronze)

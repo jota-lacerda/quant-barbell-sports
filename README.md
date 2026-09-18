@@ -1,34 +1,43 @@
-# Quant Sports Pipeline 📊
+# 📊 Agentic Quant: Sports Betting Barbell Pipeline
 
-An automated, end-to-end Python pipeline for probabilistic sports modeling and quantitative capital allocation. This project implements a strict expected value (+EV) architecture, utilizing a Dixon-Coles adjusted Poisson model and Nassim Taleb's Barbell strategy for risk management. 
+Este repositório contém um pipeline quantitativo de ponta a ponta projetado para o mercado de derivativos esportivos (Futebol). O sistema utiliza modelagem estatística (Distribuição de Poisson, EWMA, Expected Goals), integração de APIs de mercado em tempo real e um fluxo de trabalho autônomo (Agentic AI Workflow) alimentado por LLMs para alocação de portfólio baseada na **Estratégia Barbell de Nassim Taleb**.
 
-Designed as a foundational transition into analytics engineering, this pipeline prioritizes vectorized operations, strict backtesting protocols, and modular data transformations.
+## 🧠 Filosofia de Alocação (Antifragilidade)
+O motor financeiro não busca "adivinhar" resultados, mas sim precificar ineficiências (Expected Value / +EV) e gerenciar a ruína. O capital diário é dividido em dois extremos:
+*   **Ponta Âncora (75%-85%):** Proteção de caixa, eventos de baixa variância, absorção de ruído.
+*   **Ponta Convexa (15%-25%):** Captura de "Cisnes Negros", múltiplas correlacionadas via Cópulas Bivariadas (ex: Game State + Cartões), assimetria brutal de lucros.
 
-**Core Objectives**
-* Replace manual calculations with a fully vectorized Python environment using `pandas` and `numpy`.
-* Eliminate look-ahead bias and hallucination through strict walk-forward validation and robust API ingestion.
-* Manage variance using asymmetric capital allocation (85% low-variance Anchor, 15% high-yield Convex tail).
+## 🏗️ Arquitetura do Sistema (As 5 Camadas)
 
-**Pipeline Architecture**
-* **Phase 1: Ingestion (Bronze):** Automated extraction of expected goals (xG) and market closing odds via REST APIs.
-* **Phase 2: Feature Engineering (Silver):** Exponential Weighted Moving Averages (EWMA) to calculate team momentum and decay variables.
-* **Phase 3: Modeling (Gold):** Bivariate Poisson distribution parameterized via Maximum Likelihood Estimation (MLE) using `scipy.optimize`.
-* **Phase 4: Sizing:** Fractional Kelly Criterion to scale edges dynamically without risking systemic ruin.
-* **Phase 5: Deploy:** Automated integration with Google Sheets via `gspread` for Closing Line Value (CLV) auditing and dashboarding.
+O pipeline foi desenhado inspirado na arquitetura de medalhões (Bronze, Silver, Gold, Platinum):
 
-**Local Setup**
-Built and tested with Python 3.12+. 
+1.  **Camada 1 (Ingestion):** Extração de dados de *fixtures* da ESPN.
+2.  **Camada 2 (Silver - ETL):** Limpeza e padronização de nomenclaturas.
+3.  **Camada 3 (Gold - Modeling):** Cálculo dos parâmetros $\lambda_{home}$ e $\lambda_{away}$ ajustados por xG. Aplicação de *Shrinkage* (James-Stein) para mitigar viés de recência e multiplicadores friccionais (clima, altitude).
+4.  **Camada 4 (Platinum - Sizing):** Script `4_sizing.py`. 
+    * Consome **The Odds API** para odds reais de fechamento.
+    * Executa *Entity Resolution* (Fuzzy Matching) entre equipes.
+    * Calcula o *Edge* matemático (EV > 0).
+    * Fatiamento inicial do portfólio (Âncora vs. Convexa).
+5.  **Camada 5 (Deploy - Agentic AI):** Script `5_deploy.py`. 
+    * Um Agente LLM (Google Gemini 3.6 Flash) atua como Engenheiro Quantitativo.
+    * Recebe os dados purificados em JSON.
+    * Constrói os bilhetes e escreve o racional de gestão de risco.
+    * Injeta as recomendações de forma atômica no **Google Sheets** via API (`gspread`).
 
-```bash
-git clone [https://github.com/jota-lacerda/quant-sports-pipeline.git](https://github.com/jota-lacerda/quant-sports-pipeline.git)
-cd quant-sports-pipeline
-python -m venv .venv
+## 🚀 Tecnologias e Dependências
 
-# Windows (PowerShell)
-.\.venv\Scripts\Activate.ps1
+*   **Python 3.10+**
+*   `pandas`, `numpy` (Manipulação e Vetorização de Dados)
+*   `requests` (The Odds API)
+*   `google-genai` (SDK Oficial do Gemini para Agentic AI)
+*   `gspread` (Integração Google Cloud / Google Sheets)
+*   `python-dotenv` (Gestão de Variáveis de Ambiente)
+*   `difflib` (Fuzzy String Matching)
 
-# Linux/Mac (Bash)
-source .venv/bin/activate
+## ⚙️ Instalação e Setup
 
-# Install dependencies
-pip install pandas numpy scipy scikit-learn requests gspread oauth2client
+1. Clone o repositório:
+   ```bash
+   git clone [https://github.com/SEU_USUARIO/quant-barbell-sports.git](https://github.com/SEU_USUARIO/quant-barbell-sports.git)
+   cd quant-barbell-sports
