@@ -39,5 +39,5 @@ O pipeline foi desenhado inspirado na arquitetura de medalhões (Bronze, Silver,
 
 1. Clone o repositório:
    ```bash
-   git clone [https://github.com/SEU_USUARIO/quant-barbell-sports.git](https://github.com/SEU_USUARIO/quant-barbell-sports.git)
+   git clone [https://github.com/jota-lacerda/quant-barbell-sports.git](https://github.com/SEU_USUARIO/quant-barbell-sports.git)
    cd quant-barbell-sports
